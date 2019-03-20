@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -168,5 +169,255 @@ namespace _8_Puzzle
         {
 
         }
+
+        private static int[,] ReadBoardFromFile(string fileName)
+        {
+            string[] lines;
+            List<string> list = new List<string>();
+            int n = 0;
+
+            //reading the size of the game and the tile of game to a string
+            using (StreamReader streamReader = new StreamReader(fileName))
+            {
+                String line;
+                int isFirst = 1;
+                while ((line = streamReader.ReadLine()) != null)
+                {
+                    if (isFirst == 1)
+                    {
+                        n = int.Parse(line);
+                        isFirst = 0;
+                    }
+                    else
+                    {
+                        list.Add(line);
+                    }
+
+                }
+            }
+            lines = list.ToArray();
+
+            int[,] board = new int[n, n];
+            String row;
+            String[] split;
+
+            //filling the board with the given values, 0 means the empty field
+            for (int i = 0; i < n; i++)
+            {
+                row = lines[i];
+                split = split = row.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+                for (int j = 0; j < n; j++)
+                {
+                    board[i, j] = int.Parse(split[j]);
+                }
+            }
+
+            return board;
+        }
+
+        private static void PrintBoard(int[,] board)
+        {
+            int n = board.GetLength(0);
+
+            for (int i = 0; i < n; i++)
+            {
+                for (int j = 0; j < n; j++)
+                {
+                    if (board[i, j] != 0)
+                    {
+                        Console.Write("{0} ", board[i, j]);
+                    }
+                    else
+                    {   //empty
+                        Console.Write("_ ");
+                    }
+                }
+                Console.WriteLine("");
+            }
+        }
+
+        private static int[,] ReadBoardFromConsole()
+        {
+            Console.Write("Width of the game: ");
+            int n = int.Parse(Console.ReadLine());
+
+            int[,] board = new int[n, n];
+
+            for (int i = 0; i < n; i++)
+            {
+                for (int j = 0; j < n; j++)
+                {
+                    //TODO some formating...
+                    Console.Write("[{0},{1}]: ", i, j);
+                    board[i, j] = int.Parse(Console.ReadLine());
+                }
+            }
+
+            if (!isOK(board))
+            {   //TODO
+                return new int[0, 0];
+            }
+            else
+            {
+                return board;
+            }
+        }
+
+        //checking a filled board if it's legal
+        private static bool isOK(int[,] board)
+        {
+            //check if the board have a legal size
+            int n = board.GetLength(0);
+            if (n < 1)
+            {
+                return false;
+            }
+
+            //creating a number statistic, first filled with zeros
+            int[] numbers = new int[n * n];
+            for (int i = 0; i < n; i++) { numbers[i] = 0; }
+
+            for (int i = 0; i < n; i++)
+            {
+                for (int j = 0; j < n; j++)
+                {
+                    //if the number is legal in the game, ex. int a 3x3 game doesn't exist number 9 or bigger
+                    if (board[i, j] >= n * n || board[i, j] < 0)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        //count the presence of the numbers
+                        numbers[board[i, j]]++;
+                    }
+
+                    //in a legal board the tile of 2 doesn't appear more than once
+                    if (numbers[board[i, j]] > 1)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        private static bool CanMove(int i, int j, int n, int direction)
+        {
+            switch (direction) //0 - left, 1 - up, 2 - right, 3 - down 
+            {
+                case 0:
+                    if (j == 0)
+                    {
+                        return false;
+                    }
+                    break;
+                case 1:
+                    if (i == 0)
+                    {
+                        return false;
+                    }
+                    break;
+                case 2:
+                    if (j == n - 1)
+                    {
+                        return false;
+                    }
+                    break;
+                case 3:
+                    if (i == n - 1)
+                    {
+                        return false;
+                    }
+                    break;
+
+            }
+            return true;
+        }
+
+        private static void Step(int[,] board, ref int positionI, ref int positionJ, int direction)
+        {
+            int N = board.GetLength(0);
+            int tile;
+
+            switch (direction) //0 - left, 1 - up, 2 - right, 3 - down 
+            {
+                case 0:
+                    positionJ--;
+                    tile = board[positionI, positionJ];
+
+                    board[positionI, positionJ] = 0; //the empty tile
+                    board[positionI, positionJ + 1] = tile;
+
+                    break;
+                case 1:
+                    positionI--;
+                    tile = board[positionI, positionJ];
+
+                    board[positionI, positionJ] = 0;
+                    board[positionI + 1, positionJ] = tile;
+
+                    break;
+                case 2:
+                    positionJ++;
+                    tile = board[positionI, positionJ];
+
+                    board[positionI, positionJ] = 0;
+                    board[positionI, positionJ - 1] = tile;
+                    break;
+                case 3:
+                    positionI++;
+                    tile = board[positionI, positionJ];
+
+                    board[positionI, positionJ] = 0;
+                    board[positionI - 1, positionJ] = tile;
+                    break;
+
+            }
+        }
+
+        private static int[,] GenerateTable(int N, int M)
+        {
+            int[,] board = new int[N, N];
+            int temp = 0;
+
+            //generating the solved table
+            for (int i = 0; i < N; i++)
+            {
+                for (int j = 0; j < N; j++)
+                {
+                    board[i, j] = temp;
+                    temp++;
+                }
+            }
+
+            PrintBoard(board);
+
+            //taking M random step with the empty tile
+            Random rand = new Random();
+            int direction;
+
+            //the starting position of the empty tile after generating
+            int positionI = 0;
+            int positionJ = 0;
+
+            while (M > 0)
+            {
+                do
+                {
+                    direction = rand.Next(4);
+                } while (!CanMove(positionI, positionJ, N, direction));
+
+                Step(board, ref positionI, ref positionJ, direction);
+
+                M--;
+            }
+
+            return board;
+        }
+
+
     }
 }
