@@ -393,8 +393,6 @@ namespace _8_Puzzle
                 }
             }
 
-            PrintBoard(board);
-
             //taking M random step with the empty tile
             Random rand = new Random();
             int direction;
