@@ -64,20 +64,97 @@ namespace _8_Puzzle
             }
             PrintBoard(board);
 
+            //Create and initializa goalNode
+            int[,] goalNode = new int[board.Length, board.Length];
+
             if (heuristics == 1)
             {
                 //A* with number of wrong positions
-                //AStarSolve(board);
+                AStarSolve(board,goalNode,WrongPositionsCount);
             }
             if (heuristics == 2)
             {
                 //A* with Manhattan distance
+                AStarSolve(board, goalNode, ManhattanDistance);
             }
-            Console.ReadKey();
+            if (args.Length < 1)
+            {
+                Console.ReadKey();
+            }
         }
 
-        
+        private static bool AStarSolve(int[,] node, int[,] goalNode, Func<int[,], int> heuristicFunction)
+        {
+            //Initialize OPEN list
+            List<Node> openList = new List<Node>();
 
+            //Initialize CLOSED list
+            List<Node> closedList = new List<Node>();
+
+            //Create start node
+            Node startNode = new Node(node); //= ;
+
+            //Add startNode to the OPEN list
+            openList.Add(startNode);
+
+            while (openList.Count > 0)
+            {
+                //Get node n off the OPEN list with the lowest f(n)
+                int minCostNode = int.MaxValue;
+                int position = 0;
+                for(int i = 0; i < openList.Count; ++i)
+                {
+                    int currentCost = heuristicFunction(openList[i].Board);
+                    if (currentCost < minCostNode)
+                    {
+                        minCostNode = currentCost;
+                        position = i;
+                    }
+                }
+                Node nextNode = openList[position];
+                openList.RemoveAt(position);
+
+                //Add n to the CLOSED list
+                closedList.Add(nextNode);
+
+                //if n is the same as node_goal then return Solution(n)
+                if (AreSameNodes(nextNode, goalNode))
+                {
+                    return true; //???
+                }
+
+                //Generate each successor node n' of n
+                foreach (var direction in Directions)
+                {
+
+                }
+                //for each successor node n' of n {
+                //Set the parent of n' to n
+                //Set h(n') to be the heuristically estimate distance to node_goal
+                //Set g(n') to be g(n) plus the cost(=1) to get to n' from n
+                
+                //Set f(n') = g(n') + h(n')
+                //if n' is on the OPEN list and the existing one is as good or better then discard n' and continue
+                //if n' is on the CLOSED list and the existing one is as good or better then discard n' and continue
+                //Remove occurrences of n' from OPEN and CLOSED
+                //Add n' to the OPEN list
+                //}
+            }
+            return false;
+        }
+
+        private static void InitializeGoalNode(ref int[,] board, int size)
+        {
+            int counter = 0;
+            for (int i = 0; i < size; i++)
+            {
+                for (int j = 0; j < size; j++)
+                {
+                    board[i, j] = counter;
+                    counter++;
+                }
+            }
+        }
 
         private static int[,] ReadBoardFromFile(string fileName)
         {
@@ -355,7 +432,7 @@ namespace _8_Puzzle
             return wrongPositionCount;
         }
 
-        private static int ManhattanDifference(int[,] board)
+        private static int ManhattanDistance(int[,] board)
         {
             int totalDifference = 0;
 
