@@ -11,7 +11,7 @@ There's an integer (N) in the first row which means one size of the board. In th
 #### Console:
 If the board is given from console firstly we gave the N, then the tiles. The reading of tiles starts from top left corner to right.<br>
 #### Generated:
-An other way to get a board is to generate randomly. This is given from the command line arguments like '-rand 3 15'. The first number means one size of the board like before and the second means the number of random moves from initial state.
+An other way to get a board is to generate randomly. This is given from the command line arguments like `-rand 3 15`. The first number means one size of the board like before and the second means the number of random moves from initial state.
 ##### For example:
 The returned board:<br>
 3 1 2<br>
