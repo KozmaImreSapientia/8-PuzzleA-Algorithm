@@ -32,7 +32,7 @@ namespace _8_Puzzle
 
         private static bool useRandomState = false;
         private static int dimensions = 0;
-        private static int numberOfMovments = 0;
+        private static int numberOfMovements = 0;
 
         static void Main(string[] args)
         {
@@ -44,138 +44,47 @@ namespace _8_Puzzle
                     return;
                 }
             }
+            else
+            {
+                //setting some arguments implicitly
+                heuristics = 1;
+                useRandomState = true;
+                dimensions = 3;
+                numberOfMovements = 15;
+            }
+            int[,] board;
 
             if (useRandomState)
             {
                 //generate random initial state
-
+                board = GenerateTable(3, 15);
             }
             else
             {
                 //get state from given file
-
+                if (inputFile != "")
+                {
+                    board = ReadBoardFromFile(inputFile);
+                }
+                //get state from console
+                board = ReadBoardFromConsole();
             }
+            PrintBoard(board);
 
-            if(heuristics == 1)
+            if (heuristics == 1)
             {
                 //A* with number of wrong positions
-
+                //AStarSolve(board);
             }
-            if(heuristics == 2)
+            if (heuristics == 2)
             {
                 //A* with Manhattan distance
             }
             Console.ReadKey();
         }
 
-        private static bool SuccesfullyGotCommandLineArgs(string[] args)
-        {
-            bool error = false;
-            for (int i = 0; i < args.Length; ++i)
-            {
-                if (error)
-                {
-                    return false;
-                }
-                switch (args[i])
-                {
-                    case "-input":  //-input <File>
-                        if (i + 1 < args.Length)
-                        {
-                            i++;
-                            if (args[i].Length > 2)
-                            {
-                                inputFile = args[i];
-                            }
-                            else
-                            {
-                                Console.WriteLine("Wrong file name given!");
-                                error = true;
-                            }
-                        }
-                        break;
+        
 
-                    case "-solseq":
-                        printSolutionSequence = true;
-                        break;
-
-                    case "-pcost":
-                        printCost = true;
-                        break;
-
-                    case "-nvisited":
-                        printVisitedNodes = true;
-                        break;
-
-                    case "-h":  // -h <H> = type of the heuristics
-                        if (i + 1 < args.Length)
-                        {
-                            i++;
-                            switch (args[i])
-                            {
-                                case "1":
-                                    heuristics = 1;
-                                    break;
-                                case "2":
-                                    heuristics = 2;
-                                    break;
-                                default:
-                                    heuristics = 0;
-                                    break;
-                            }
-                        }
-                        break;
-
-                    case "-rand":  //–rand <N> <M>
-                        useRandomState = true;
-                        if (i + 2 < args.Length)
-                        {
-                            i++;
-                            int number;
-                            bool result = Int32.TryParse(args[i], out number);
-                            if (result)
-                            {
-                                dimensions = number;
-                            }
-                            else
-                            {
-                                Console.WriteLine("Wrong parameters for generating random initial state!");
-                                error = true;
-                            }
-
-                            i++;
-                            result = Int32.TryParse(args[i], out number);
-                            if (result)
-                            {
-                                numberOfMovments = number;
-                            }
-                            else
-                            {
-                                Console.WriteLine("Wrong parameters for generating random initial state!");
-                                error = true;
-                            }
-                        }
-                        break;
-                    default:
-                        Console.WriteLine("Unknown argument: " + args[i]);
-                        break;
-                }
-            }
-
-            //checking arguments to be correct
-            if (heuristics == 0)
-            {
-                Console.WriteLine("Wrong heuristics given! Heuristics should be 1 or 2");
-                return false;
-            }
-
-            return true;
-        }
-
-        private static void printData()
-        {
-
-        }
 
         private static int[,] ReadBoardFromFile(string fileName)
         {
@@ -272,7 +181,7 @@ namespace _8_Puzzle
         }
 
         //checking a filled board if it's legal
-        private static bool isOK(int[,] board)
+        private static bool IsOK(int[,] board)
         {
             //check if the board have a legal size
             int n = board.GetLength(0);
@@ -459,6 +368,184 @@ namespace _8_Puzzle
             return board;
         }
 
+        private static void ValueToCoordinates(int board_size, int value, ref int out_x, ref int out_y)
+        {
+            out_x = value / board_size;
+            out_y = value % board_size;
+        }
+
+        private static int ManhattanDistanceBetweenCoordinates(int p1_x, int p1_y, int p2_x, int p2_y)
+        {
+            int distX = Math.Abs(p1_x - p2_x);
+            int distY = Math.Abs(p1_y - p2_y);
+            return distX + distY;
+        }
+
+        private static int WrongPositions(int[,] board)
+        {
+            /*
+            Returns 0 if the board looks like this one:
+            n=3:
+                    0  1  2
+                    3  4  5
+                    6  7  8
+            */
+
+            int wrongPositionCount = 0;
+            int n = board.GetLength(0);
+            int c = 0;
+
+            for (int i = 0; i < n; ++i)
+            {
+                for (int j = 0; j < n; ++j)
+                {
+                    if (board[i, j] != c)
+                    {
+                        ++wrongPositionCount;
+                    }
+                    ++c;
+                }
+            }
+
+            return wrongPositionCount;
+        }
+
+        private static int ManhattanDifference(int[,] board, bool debug = false)
+        {
+            int totalDifference = 0;
+
+            int n = board.GetLength(0);
+
+            for (int i = 0; i < n; ++i)
+            {
+                for (int j = 0; j < n; ++j)
+                {
+                    int value = board[i, j];
+
+                    // get the final coordinate for current value:
+
+                    int finalX = -1;
+                    int finalY = -1; ;
+                    ValueToCoordinates(n, value, ref finalX, ref finalY);
+
+                    if(debug) Console.Write("["+i+","+j+"] with value of "+ board[i, j] + " has to been moved to ["+ finalX + ","+ finalY + "] coordinates.");
+
+                    // calculate mengattan distance:
+
+                    int dist = ManhattanDistanceBetweenCoordinates(i, j, finalX, finalY);
+                    
+                    if(debug) Console.WriteLine(" Manhattan distance to goal: " + dist );
+
+                    totalDifference += dist;
+                }
+            }
+
+            return totalDifference;
+        }
+
+        private static bool SuccesfullyGotCommandLineArgs(string[] args)
+        {
+            bool error = false;
+            for (int i = 0; i < args.Length; ++i)
+            {
+                if (error)
+                {
+                    return false;
+                }
+                switch (args[i])
+                {
+                    case "-input":  //-input <File>
+                        if (i + 1 < args.Length)
+                        {
+                            i++;
+                            if (args[i].Length > 2)
+                            {
+                                inputFile = args[i];
+                            }
+                            else
+                            {
+                                Console.WriteLine("Wrong file name given!");
+                                error = true;
+                            }
+                        }
+                        break;
+
+                    case "-solseq":
+                        printSolutionSequence = true;
+                        break;
+
+                    case "-pcost":
+                        printCost = true;
+                        break;
+
+                    case "-nvisited":
+                        printVisitedNodes = true;
+                        break;
+
+                    case "-h":  // -h <H> = type of the heuristics
+                        if (i + 1 < args.Length)
+                        {
+                            i++;
+                            switch (args[i])
+                            {
+                                case "1":
+                                    heuristics = 1;
+                                    break;
+                                case "2":
+                                    heuristics = 2;
+                                    break;
+                                default:
+                                    heuristics = 0;
+                                    break;
+                            }
+                        }
+                        break;
+
+                    case "-rand":  //–rand <N> <M>
+                        useRandomState = true;
+                        if (i + 2 < args.Length)
+                        {
+                            i++;
+                            int number;
+                            bool result = Int32.TryParse(args[i], out number);
+                            if (result)
+                            {
+                                dimensions = number;
+                            }
+                            else
+                            {
+                                Console.WriteLine("Wrong parameters for generating random initial state!");
+                                error = true;
+                            }
+
+                            i++;
+                            result = Int32.TryParse(args[i], out number);
+                            if (result)
+                            {
+                                numberOfMovements = number;
+                            }
+                            else
+                            {
+                                Console.WriteLine("Wrong parameters for generating random initial state!");
+                                error = true;
+                            }
+                        }
+                        break;
+                    default:
+                        Console.WriteLine("Unknown argument: " + args[i]);
+                        break;
+                }
+            }
+
+            //checking arguments to be correct
+            if (heuristics == 0)
+            {
+                Console.WriteLine("Wrong heuristics given! Heuristics should be 1 or 2");
+                return false;
+            }
+
+            return true;
+        }
 
     }
 }
