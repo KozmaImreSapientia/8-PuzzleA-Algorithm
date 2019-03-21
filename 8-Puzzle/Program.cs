@@ -52,7 +52,6 @@ namespace _8_Puzzle
             if(heuristics == 1)
             {
                 //A* with number of wrong positions
-
             }
             if(heuristics == 2)
             {
@@ -416,6 +415,62 @@ namespace _8_Puzzle
             return board;
         }
 
+        private static int wrongPositions(int[,] board)
+        {
+            /*
+            Returns 0 if the board looks like this one:
+            n=3:
+                    0  1  2
+                    3  4  5
+                    6  7  8
+            */
 
+            int wrongPositionCount = 0;
+            int n = board.GetLength(0);
+            int c = 0;
+
+            for (int i = 0; i < n; ++i)
+            {
+                for (int j = 0; j < n; ++j)
+                {
+                    if (board[i, j] != c)
+                    {
+                        ++wrongPositionCount;
+                    }
+                    ++c;
+                }
+            }
+
+            return wrongPositionCount;
+        }
+
+        private static int menhattanDifference(int[,] board)
+        {
+            int totalDifference = 0;
+
+            int n = board.GetLength(0);
+
+            for (int i = 0; i < n; ++i)
+            {
+                for (int j = 0; j < n; ++j)
+                {
+                    int value = board[i, j];
+
+                    // get the final coordinate for current value:
+                    int finalX = value / n;
+                    int finalY = value % n;
+                    //Console.Write("["+i+","+j+"] with value of "+ board[i, j] + " has to been moved to ["+ finalX + ","+ finalY + "] coordinates.");
+
+                    // calculate mengattan distance:
+                    int mX = Math.Abs(i - finalX);
+                    int mY = Math.Abs(j - finalY);
+                    //Console.WriteLine(" Manhattan distance to goal: " + (mX+mY) );
+
+                    totalDifference += mX + mY;
+                }
+            }
+
+            return totalDifference;
+        }
     }
 }
