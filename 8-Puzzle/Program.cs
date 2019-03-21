@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
+
 namespace _8_Puzzle
 {
     class Program
@@ -75,9 +76,6 @@ namespace _8_Puzzle
             }
             Console.ReadKey();
         }
-
-        
-
 
         private static int[,] ReadBoardFromFile(string fileName)
         {
@@ -246,7 +244,6 @@ namespace _8_Puzzle
             return true;
         }
 
-
         private static void Step(int[,] board, ref int positionI, ref int positionJ, int direction)
         {
             int N = board.GetLength(0);
@@ -368,8 +365,10 @@ namespace _8_Puzzle
             return wrongPositionCount;
         }
 
-        private static int ManhattanDifference(int[,] board, bool debug = false)
+        private static int ManhattanDistance(int[,] board, bool debug = false)
         {
+            // Worst Manhattan Distance (31)    n=3 : board={{8, 7, 6}, {0, 4, 1}, {2, 5, 3}}
+
             int totalDifference = 0;
 
             int n = board.GetLength(0);
@@ -380,19 +379,19 @@ namespace _8_Puzzle
                 {
                     int value = board[i, j];
 
-                    // get the final coordinate for current value:
+                    if (value == 0) continue;
 
+                    // get the final coordinate for current value:
                     int finalX = -1;
                     int finalY = -1; ;
                     ValueToCoordinates(n, value, ref finalX, ref finalY);
 
-                    if(debug) Console.Write("["+i+","+j+"] with value of "+ board[i, j] + " has to been moved to ["+ finalX + ","+ finalY + "] coordinates.");
-
+                   
                     // calculate mengattan distance:
-
                     int dist = ManhattanDistanceBetweenCoordinates(i, j, finalX, finalY);
-                    
-                    if(debug) Console.WriteLine(" Manhattan distance to goal: " + dist );
+
+                    if (debug) Console.Write("[" + i + "," + j + "] with value of " + board[i, j] + " has to been moved to [" + finalX + "," + finalY + "] coordinates.");
+                    if (debug) Console.WriteLine(" Manhattan distance to goal: " + dist );
 
                     totalDifference += dist;
                 }
