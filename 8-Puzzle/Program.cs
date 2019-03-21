@@ -11,6 +11,13 @@ namespace _8_Puzzle
 {
     class Program
     {
+        enum Directions{
+            Left = 0,
+            Up = 1,
+            Right = 2,
+            Down = 3
+        }
+
         private static string inputFile = "";
 
         private static bool printSolutionSequence = false;
@@ -161,8 +168,8 @@ namespace _8_Puzzle
                 }
             }
 
-            if (!IsOK(board))
-            {   //TODO
+            if (!isOK(board))
+            {
                 return new int[0, 0];
             }
             else
@@ -215,25 +222,25 @@ namespace _8_Puzzle
         {
             switch (direction) //0 - left, 1 - up, 2 - right, 3 - down 
             {
-                case 0:
+                case (int)Directions.Left:
                     if (j == 0)
                     {
                         return false;
                     }
                     break;
-                case 1:
+                case (int)Directions.Up:
                     if (i == 0)
                     {
                         return false;
                     }
                     break;
-                case 2:
+                case (int)Directions.Right:
                     if (j == n - 1)
                     {
                         return false;
                     }
                     break;
-                case 3:
+                case (int)Directions.Down:
                     if (i == n - 1)
                     {
                         return false;
@@ -247,41 +254,77 @@ namespace _8_Puzzle
         private static void Step(int[,] board, ref int positionI, ref int positionJ, int direction)
         {
             int N = board.GetLength(0);
-            int tile;
+            int newTile;
+            int originalTile = board[positionI, positionJ];
+
+            if (!CanMove(positionI, positionJ, N, direction))
+            {
+                Console.WriteLine("Tile can't move that direction!");
+                return;
+            }
 
             switch (direction) //0 - left, 1 - up, 2 - right, 3 - down 
             {
-                case 0:
+                case (int)Directions.Left:
                     positionJ--;
-                    tile = board[positionI, positionJ];
+                    newTile = board[positionI, positionJ];
 
-                    board[positionI, positionJ] = 0; //the empty tile
-                    board[positionI, positionJ + 1] = tile;
+                    board[positionI, positionJ] = originalTile; //the empty tile
+                    board[positionI, positionJ + 1] = newTile;
 
                     break;
-                case 1:
+                case (int)Directions.Up:
                     positionI--;
-                    tile = board[positionI, positionJ];
+                    newTile = board[positionI, positionJ];
 
-                    board[positionI, positionJ] = 0;
-                    board[positionI + 1, positionJ] = tile;
+                    board[positionI, positionJ] = originalTile;
+                    board[positionI + 1, positionJ] = newTile;
 
                     break;
-                case 2:
+                case (int)Directions.Right:
                     positionJ++;
-                    tile = board[positionI, positionJ];
+                    newTile = board[positionI, positionJ];
 
-                    board[positionI, positionJ] = 0;
-                    board[positionI, positionJ - 1] = tile;
+                    board[positionI, positionJ] = originalTile;
+                    board[positionI, positionJ - 1] = newTile;
                     break;
-                case 3:
+                case (int)Directions.Down:
                     positionI++;
-                    tile = board[positionI, positionJ];
+                    newTile = board[positionI, positionJ];
 
-                    board[positionI, positionJ] = 0;
-                    board[positionI - 1, positionJ] = tile;
+                    board[positionI, positionJ] = originalTile;
+                    board[positionI - 1, positionJ] = newTile;
                     break;
 
+            }
+        }
+
+        private static void Step(int[,] board, int direction)
+        {
+            int posI = -1, posJ = -1, N = board.GetLength(0);
+
+            //searching the empty tile
+            for (int i = 0; i < N; i++)
+            {
+                for(int j = 0; j < N; j++)
+                {
+                    //if this is the empty tile
+                    if(board[i,j] == 0)
+                    {
+                        posI = i;
+                        posJ = j;
+                        break;
+                    }
+                }
+            }
+            if(posI == -1 || posJ == -1)
+            {
+                Console.WriteLine("Missing empty tile!");
+                return;
+            }
+            else
+            {
+                Step(board, ref posI, ref posJ, direction);
             }
         }
 
