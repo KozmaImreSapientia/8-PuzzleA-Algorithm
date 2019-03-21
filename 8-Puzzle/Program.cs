@@ -51,7 +51,7 @@ namespace _8_Puzzle
             if(heuristics == 1)
             {
                 //A* with number of wrong positions
-
+                //AStarSolve();
             }
             if(heuristics == 2)
             {
@@ -164,9 +164,42 @@ namespace _8_Puzzle
             return true;
         }
 
-        private static void printData()
+        private static bool AStarSolve(int[,] board)
         {
+            //Initialize OPEN list
+            List<int> openList = new List<int>();
 
-        }
+            //Initialize CLOSED list
+            List<int> closedList = new List<int>();
+
+            //Create goal node
+            int goalNode = 0; //= ;
+
+            //Create start node
+            int startNode = 0; //= ;
+
+            //Add startNode to the OPEN list
+            openList.Add(startNode);
+
+            while (openList.Count > 0) {
+                //Get node n off the OPEN list with the lowest f(n)
+
+                //Add n to the CLOSED list
+                //if n is the same as node_goal then return Solution(n)
+                //Generate each successor node n' of n
+                //for each successor node n' of n {
+                    //Set the parent of n' to n
+                    //Set h(n') to be the heuristically estimate distance to node_goal
+                    //Set g(n') to be g(n) plus the cost to get to n' from n
+                    //Set f(n') = g(n') + h(n')
+                    //if n' is on the OPEN list and the existing one is as good or better then discard n' and continue
+                    //if n' is on the CLOSED list and the existing one is as good or better then discard n' and continue
+                    //Remove occurrences of n' from OPEN and CLOSED
+                    //Add n' to the OPEN list
+                //}
+            }
+            return false;
+
     }
+}
 }
