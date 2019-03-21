@@ -504,5 +504,29 @@ namespace _8_Puzzle
             return true;
         }
 
+        private static bool AreSameNodes(int[,] board_1, int[,] board_2)
+        {
+            int n = board_1.GetLength(0);
+            int m = board_1.GetLength(0);
+            if( n != board_2.GetLength(0) || m != board_2.GetLength(1) )
+            {
+                Console.WriteLine("Can't compare boards with different size!");
+                return false;
+            }
+
+            for (int i = 0; i < n; ++i)
+            {
+                for (int j = 0; j < m; ++j)
+                {
+                    if( board_1[i,j] != board_2[i, j] )
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+
     }
 }
