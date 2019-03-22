@@ -6,10 +6,18 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
+
 namespace _8_Puzzle
 {
     class Program
     {
+        enum Directions{
+            Left = 0,
+            Up = 1,
+            Right = 2,
+            Down = 3
+        }
+
         private static string inputFile = "";
 
         private static bool printSolutionSequence = false;
@@ -240,8 +248,8 @@ namespace _8_Puzzle
                 }
             }
 
-            if (!IsOK(board))
-            {   //TODO
+            if (!isOK(board))
+            {
                 return new int[0, 0];
             }
             else
@@ -294,25 +302,25 @@ namespace _8_Puzzle
         {
             switch (direction) //0 - left, 1 - up, 2 - right, 3 - down 
             {
-                case 0:
+                case (int)Directions.Left:
                     if (j == 0)
                     {
                         return false;
                     }
                     break;
-                case 1:
+                case (int)Directions.Up:
                     if (i == 0)
                     {
                         return false;
                     }
                     break;
-                case 2:
+                case (int)Directions.Right:
                     if (j == n - 1)
                     {
                         return false;
                     }
                     break;
-                case 3:
+                case (int)Directions.Down:
                     if (i == n - 1)
                     {
                         return false;
@@ -323,45 +331,80 @@ namespace _8_Puzzle
             return true;
         }
 
-
         private static void Step(int[,] board, ref int positionI, ref int positionJ, int direction)
         {
             int N = board.GetLength(0);
-            int tile;
+            int newTile;
+            int originalTile = board[positionI, positionJ];
+
+            if (!CanMove(positionI, positionJ, N, direction))
+            {
+                Console.WriteLine("Tile can't move that direction!");
+                return;
+            }
 
             switch (direction) //0 - left, 1 - up, 2 - right, 3 - down 
             {
-                case 0:
+                case (int)Directions.Left:
                     positionJ--;
-                    tile = board[positionI, positionJ];
+                    newTile = board[positionI, positionJ];
 
-                    board[positionI, positionJ] = 0; //the empty tile
-                    board[positionI, positionJ + 1] = tile;
+                    board[positionI, positionJ] = originalTile; //the empty tile
+                    board[positionI, positionJ + 1] = newTile;
 
                     break;
-                case 1:
+                case (int)Directions.Up:
                     positionI--;
-                    tile = board[positionI, positionJ];
+                    newTile = board[positionI, positionJ];
 
-                    board[positionI, positionJ] = 0;
-                    board[positionI + 1, positionJ] = tile;
+                    board[positionI, positionJ] = originalTile;
+                    board[positionI + 1, positionJ] = newTile;
 
                     break;
-                case 2:
+                case (int)Directions.Right:
                     positionJ++;
-                    tile = board[positionI, positionJ];
+                    newTile = board[positionI, positionJ];
 
-                    board[positionI, positionJ] = 0;
-                    board[positionI, positionJ - 1] = tile;
+                    board[positionI, positionJ] = originalTile;
+                    board[positionI, positionJ - 1] = newTile;
                     break;
-                case 3:
+                case (int)Directions.Down:
                     positionI++;
-                    tile = board[positionI, positionJ];
+                    newTile = board[positionI, positionJ];
 
-                    board[positionI, positionJ] = 0;
-                    board[positionI - 1, positionJ] = tile;
+                    board[positionI, positionJ] = originalTile;
+                    board[positionI - 1, positionJ] = newTile;
                     break;
 
+            }
+        }
+
+        private static void Step(int[,] board, int direction)
+        {
+            int posI = -1, posJ = -1, N = board.GetLength(0);
+
+            //searching the empty tile
+            for (int i = 0; i < N; i++)
+            {
+                for(int j = 0; j < N; j++)
+                {
+                    //if this is the empty tile
+                    if(board[i,j] == 0)
+                    {
+                        posI = i;
+                        posJ = j;
+                        break;
+                    }
+                }
+            }
+            if(posI == -1 || posJ == -1)
+            {
+                Console.WriteLine("Missing empty tile!");
+                return;
+            }
+            else
+            {
+                Step(board, ref posI, ref posJ, direction);
             }
         }
 
@@ -403,7 +446,20 @@ namespace _8_Puzzle
             return board;
         }
 
-        private static int WrongPositionsCount(int[,] board)
+        private static void ValueToCoordinates(int board_size, int value, ref int out_x, ref int out_y)
+        {
+            out_x = value / board_size;
+            out_y = value % board_size;
+        }
+
+        private static int ManhattanDistanceBetweenCoordinates(int p1_x, int p1_y, int p2_x, int p2_y)
+        {
+            int distX = Math.Abs(p1_x - p2_x);
+            int distY = Math.Abs(p1_y - p2_y);
+            return distX + distY;
+        }
+
+        private static int WrongPositions(int[,] board)
         {
             /*
             Returns 0 if the board looks like this one:
@@ -432,8 +488,10 @@ namespace _8_Puzzle
             return wrongPositionCount;
         }
 
-        private static int ManhattanDistance(int[,] board)
+        private static int ManhattanDistance(int[,] board, bool debug = false)
         {
+            // Worst Manhattan Distance (31)    n=3 : board={{8, 7, 6}, {0, 4, 1}, {2, 5, 3}}
+
             int totalDifference = 0;
 
             int n = board.GetLength(0);
@@ -444,17 +502,21 @@ namespace _8_Puzzle
                 {
                     int value = board[i, j];
 
+                    if (value == 0) continue;
+
                     // get the final coordinate for current value:
-                    int finalX = value / n;
-                    int finalY = value % n;
-                    //Console.Write("["+i+","+j+"] with value of "+ board[i, j] + " has to been moved to ["+ finalX + ","+ finalY + "] coordinates.");
+                    int finalX = -1;
+                    int finalY = -1; ;
+                    ValueToCoordinates(n, value, ref finalX, ref finalY);
 
+                   
                     // calculate mengattan distance:
-                    int mX = Math.Abs(i - finalX);
-                    int mY = Math.Abs(j - finalY);
-                    //Console.WriteLine(" Manhattan distance to goal: " + (mX+mY) );
+                    int dist = ManhattanDistanceBetweenCoordinates(i, j, finalX, finalY);
 
-                    totalDifference += mX + mY;
+                    if (debug) Console.Write("[" + i + "," + j + "] with value of " + board[i, j] + " has to been moved to [" + finalX + "," + finalY + "] coordinates.");
+                    if (debug) Console.WriteLine(" Manhattan distance to goal: " + dist );
+
+                    totalDifference += dist;
                 }
             }
 
@@ -564,6 +626,30 @@ namespace _8_Puzzle
 
             return true;
         }
+
+        private static bool AreSameNodes(int[,] board_1, int[,] board_2)
+        {
+            int n = board_1.GetLength(0);
+            int m = board_1.GetLength(0);
+            if( n != board_2.GetLength(0) || m != board_2.GetLength(1) )
+            {
+                Console.WriteLine("Can't compare boards with different size!");
+                return false;
+            }
+
+            for (int i = 0; i < n; ++i)
+            {
+                for (int j = 0; j < m; ++j)
+                {
+                    if( board_1[i,j] != board_2[i, j] )
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
 
     }
 }
