@@ -11,7 +11,8 @@ namespace _8_Puzzle
 {
     class Program
     {
-        enum Directions{
+        enum Directions
+        {
             Left = 0,
             Up = 1,
             Right = 2,
@@ -51,14 +52,14 @@ namespace _8_Puzzle
                 heuristics = 1;
                 useRandomState = true;
                 dimensions = 3;
-                numberOfMovements = 15;
+                numberOfMovements = 55;
             }
             int[,] board;
 
             if (useRandomState)
             {
                 //generate random initial state
-                board = GenerateTable(3, 15);
+                board = GenerateTable(dimensions, numberOfMovements);
             }
             else
             {
@@ -73,17 +74,30 @@ namespace _8_Puzzle
             PrintBoard(board);
 
             //Create and initializa goalNode
-            int[,] goalNode = new int[board.Length, board.Length];
+            int[,] goalNode = new int[board.GetLength(0), board.GetLength(1)];
 
             if (heuristics == 1)
             {
                 //A* with number of wrong positions
-                AStarSolve(board,goalNode,WrongPositionsCount);
+                if(AStarSolve(board, goalNode, WrongPositionsCount))
+                {
+                    Console.WriteLine("Solution found");
+                }
+                else
+                {
+                    Console.WriteLine("Couldn't find a solution");
+                }
             }
             if (heuristics == 2)
             {
                 //A* with Manhattan distance
-                AStarSolve(board, goalNode, ManhattanDistance);
+                if(AStarSolve(board, goalNode, ManhattanDistance)){
+                    Console.WriteLine("Solution found");
+                }
+                else
+                {
+                    Console.WriteLine("Couldn't find a solution");
+                }
             }
             if (args.Length < 1)
             {
@@ -94,10 +108,10 @@ namespace _8_Puzzle
         private static bool AStarSolve(int[,] node, int[,] goalNode, Func<int[,], int> heuristicFunction)
         {
             //Initialize OPEN list
-            List<Node> openList = new List<Node>();
+            List<Node> openList = new List<Node>();     //should be priority queue!!!!!!!!!
 
             //Initialize CLOSED list
-            List<Node> closedList = new List<Node>();
+            List<Node> closedList = new List<Node>();   //should be priority queue!!!!!!!!!!
 
             //Create start node
             Node startNode = new Node(node); //= ;
@@ -110,7 +124,7 @@ namespace _8_Puzzle
                 //Get node n off the OPEN list with the lowest f(n)
                 int minCostNode = int.MaxValue;
                 int position = 0;
-                for(int i = 0; i < openList.Count; ++i)
+                for (int i = 0; i < openList.Count; ++i)
                 {
                     int currentCost = heuristicFunction(openList[i].Board);
                     if (currentCost < minCostNode)
@@ -125,30 +139,103 @@ namespace _8_Puzzle
                 //Add n to the CLOSED list
                 closedList.Add(nextNode);
 
+                PrintBoard(nextNode.Board);
+                //Console.WriteLine(heuristicFunction(nextNode.Board));
+                
+
                 //if n is the same as node_goal then return Solution(n)
-                if (AreSameNodes(nextNode, goalNode))
+                /*if (Node.AreSameNodes(nextNode.Board, goalNode))  //not working correctly
                 {
-                    return true; //???
+                    return true; 
+                }*/
+                if (heuristicFunction(nextNode.Board) == 0)
+                {
+                    return true;
                 }
 
                 //Generate each successor node n' of n
-                foreach (var direction in Directions)
-                {
+                List<Node> successors = new List<Node>();
+                GenerateSuccessors(successors, nextNode);
 
-                }
                 //for each successor node n' of n {
-                //Set the parent of n' to n
-                //Set h(n') to be the heuristically estimate distance to node_goal
-                //Set g(n') to be g(n) plus the cost(=1) to get to n' from n
-                
-                //Set f(n') = g(n') + h(n')
-                //if n' is on the OPEN list and the existing one is as good or better then discard n' and continue
-                //if n' is on the CLOSED list and the existing one is as good or better then discard n' and continue
-                //Remove occurrences of n' from OPEN and CLOSED
-                //Add n' to the OPEN list
-                //}
+                foreach (var item in successors)
+                {
+                    //Set the parent of n' to n
+                    item.Parent = nextNode;
+
+                    //Set h(n') to be the heuristically estimate distance to node_goal
+                    int distanceToGoal = heuristicFunction(item.Board);
+                    
+                    //Set g(n') to be g(n) plus the cost to get to n' from n (=1)
+                    int costToItem = item.Parent.Cost + 1;
+
+                    //Set f(n') = g(n') + h(n')
+                    item.Cost = costToItem;// + distanceToGoal;
+
+                    //if n' is on the OPEN list and the existing one is as good or better then discard n' and continue
+                    var openCopy = openList.Find(x => x.Equals(item));
+                    if (openCopy != null)
+                    {
+                        if (openCopy.Cost <= item.Cost)
+                        {
+                            continue;
+                        }
+                    }
+
+                    //if n' is on the CLOSED list and the existing one is as good or better then discard n' and continue
+                    var closedCopy = closedList.Find(x => x.Equals(item));
+                    if (closedCopy != null)
+                    {
+                        if (closedCopy.Cost <= item.Cost)
+                        {
+                            continue;
+                        }
+                    }
+
+                    //Remove occurrences of n' from OPEN and CLOSED
+                    openList.RemoveAll(x => Node.AreSameNodes(x.Board, item.Board));
+                    closedList.RemoveAll(x => Node.AreSameNodes(x.Board, item.Board));
+
+                    //Add n' to the OPEN list
+                    openList.Add(item);
+                }
             }
             return false;
+        }
+
+        private static void GenerateSuccessors(List<Node> successors, Node node)
+        {
+            int[,] copy1 = new int[node.Board.GetLength(0), node.Board.GetLength(1)];
+            Array.Copy(node.Board, copy1, node.Board.Length);
+            if (Step(copy1, (int)Directions.Left))
+            {
+                //PrintBoard(copy1);
+                successors.Add(new Node(copy1));
+            }
+
+            int[,] copy2 = new int[node.Board.GetLength(0), node.Board.GetLength(1)];
+            Array.Copy(node.Board, copy2, node.Board.Length);
+            if (Step(copy2, (int)Directions.Up))
+            {
+                //PrintBoard(copy2);
+                successors.Add(new Node(copy2));
+            }
+
+            int[,] copy3 = new int[node.Board.GetLength(0), node.Board.GetLength(1)];
+            Array.Copy(node.Board, copy3, node.Board.Length);
+            if (Step(copy3, (int)Directions.Right))
+            {
+                //PrintBoard(copy3);
+                successors.Add(new Node(copy3));
+            }
+
+            int[,] copy4 = new int[node.Board.GetLength(0), node.Board.GetLength(1)];
+            Array.Copy(node.Board, copy4, node.Board.Length);
+            if (Step(copy4, (int)Directions.Down))
+            {
+                //PrintBoard(copy4);
+                successors.Add(new Node(copy4));
+            }
         }
 
         private static void InitializeGoalNode(ref int[,] board, int size)
@@ -229,6 +316,7 @@ namespace _8_Puzzle
                 }
                 Console.WriteLine("");
             }
+            Console.WriteLine();
         }
 
         private static int[,] ReadBoardFromConsole()
@@ -248,7 +336,7 @@ namespace _8_Puzzle
                 }
             }
 
-            if (!isOK(board))
+            if (!IsOK(board))
             {
                 return new int[0, 0];
             }
@@ -331,7 +419,7 @@ namespace _8_Puzzle
             return true;
         }
 
-        private static void Step(int[,] board, ref int positionI, ref int positionJ, int direction)
+        private static bool Step(int[,] board, ref int positionI, ref int positionJ, int direction)
         {
             int N = board.GetLength(0);
             int newTile;
@@ -339,8 +427,8 @@ namespace _8_Puzzle
 
             if (!CanMove(positionI, positionJ, N, direction))
             {
-                Console.WriteLine("Tile can't move that direction!");
-                return;
+                //Console.WriteLine("Tile can't move that direction!");
+                return false;
             }
 
             switch (direction) //0 - left, 1 - up, 2 - right, 3 - down 
@@ -375,21 +463,22 @@ namespace _8_Puzzle
                     board[positionI, positionJ] = originalTile;
                     board[positionI - 1, positionJ] = newTile;
                     break;
-
             }
+
+            return true;
         }
 
-        private static void Step(int[,] board, int direction)
+        private static bool Step(int[,] board, int direction)
         {
             int posI = -1, posJ = -1, N = board.GetLength(0);
 
             //searching the empty tile
             for (int i = 0; i < N; i++)
             {
-                for(int j = 0; j < N; j++)
+                for (int j = 0; j < N; j++)
                 {
                     //if this is the empty tile
-                    if(board[i,j] == 0)
+                    if (board[i, j] == 0)
                     {
                         posI = i;
                         posJ = j;
@@ -397,14 +486,14 @@ namespace _8_Puzzle
                     }
                 }
             }
-            if(posI == -1 || posJ == -1)
+            if (posI == -1 || posJ == -1)
             {
                 Console.WriteLine("Missing empty tile!");
-                return;
+                return false;
             }
             else
             {
-                Step(board, ref posI, ref posJ, direction);
+                return Step(board, ref posI, ref posJ, direction);
             }
         }
 
@@ -459,7 +548,7 @@ namespace _8_Puzzle
             return distX + distY;
         }
 
-        private static int WrongPositions(int[,] board)
+        private static int WrongPositionsCount(int[,] board)
         {
             /*
             Returns 0 if the board looks like this one:
@@ -477,7 +566,7 @@ namespace _8_Puzzle
             {
                 for (int j = 0; j < n; ++j)
                 {
-                    if (board[i, j] != c)
+                    if (board[i, j] != 0 && board[i, j] != n*i+j)
                     {
                         ++wrongPositionCount;
                     }
@@ -488,7 +577,7 @@ namespace _8_Puzzle
             return wrongPositionCount;
         }
 
-        private static int ManhattanDistance(int[,] board, bool debug = false)
+        private static int ManhattanDistance(int[,] board)
         {
             // Worst Manhattan Distance (31)    n=3 : board={{8, 7, 6}, {0, 4, 1}, {2, 5, 3}}
 
@@ -509,12 +598,12 @@ namespace _8_Puzzle
                     int finalY = -1; ;
                     ValueToCoordinates(n, value, ref finalX, ref finalY);
 
-                   
+
                     // calculate mengattan distance:
                     int dist = ManhattanDistanceBetweenCoordinates(i, j, finalX, finalY);
 
-                    if (debug) Console.Write("[" + i + "," + j + "] with value of " + board[i, j] + " has to been moved to [" + finalX + "," + finalY + "] coordinates.");
-                    if (debug) Console.WriteLine(" Manhattan distance to goal: " + dist );
+                    //if (debug) Console.Write("[" + i + "," + j + "] with value of " + board[i, j] + " has to been moved to [" + finalX + "," + finalY + "] coordinates.");
+                    //if (debug) Console.WriteLine(" Manhattan distance to goal: " + dist );
 
                     totalDifference += dist;
                 }
@@ -627,29 +716,6 @@ namespace _8_Puzzle
             return true;
         }
 
-        private static bool AreSameNodes(int[,] board_1, int[,] board_2)
-        {
-            int n = board_1.GetLength(0);
-            int m = board_1.GetLength(0);
-            if( n != board_2.GetLength(0) || m != board_2.GetLength(1) )
-            {
-                Console.WriteLine("Can't compare boards with different size!");
-                return false;
-            }
-
-            for (int i = 0; i < n; ++i)
-            {
-                for (int j = 0; j < m; ++j)
-                {
-                    if( board_1[i,j] != board_2[i, j] )
-                    {
-                        return false;
-                    }
-                }
-            }
-            return true;
-        }
-
-
+        
     }
 }
