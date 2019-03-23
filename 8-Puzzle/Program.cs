@@ -52,7 +52,7 @@ namespace _8_Puzzle
                 heuristics = 1;
                 useRandomState = true;
                 dimensions = 3;
-                numberOfMovements = 55;
+                numberOfMovements = 100;
             }
             int[,] board;
 
