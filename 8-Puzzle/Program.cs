@@ -22,14 +22,12 @@ namespace _8_Puzzle
         private static string inputFile = "";
 
         private static bool printSolutionSequence = false;
-        // solution sequence (List??)
 
         private static bool printCost = false;
         private static int cost = 0;
 
         private static bool printVisitedNodes = false;
-        private static int visitedNodes=0;
-        // visited nodes (List??)
+        private static int visitedNodes = 0;
 
         private static int heuristics = 2;
 
@@ -39,13 +37,12 @@ namespace _8_Puzzle
 
         static void Main(string[] args)
         {
-           
+
             //getting command line args
             if (args.Length > 0)
             {
                 if (!SuccesfullyGotCommandLineArgs(args))
                 {
-
                     return;
                 }
             }
@@ -56,10 +53,12 @@ namespace _8_Puzzle
                 useRandomState = true;
                 dimensions = 3;
                 numberOfMovements = 30;
-
+                printCost = true;
+                printSolutionSequence = true;
+                printVisitedNodes = true;
             }
             int[,] board;
-            useRandomState = true;
+            //useRandomState = true;
             if (useRandomState)
             {
                 //generate random initial state
@@ -71,18 +70,18 @@ namespace _8_Puzzle
                 if (inputFile != "")
                 {
                     board = ReadBoardFromFile(inputFile);
-                   // PrintBoard(board);
-                    
+
                 }
                 else
                 {
                     //get state from console
                     board = ReadBoardFromConsole();
-                   // PrintBoard(board);
                 }
-              
+
             }
-            
+
+            Console.WriteLine("Initial board:");
+            PrintBoard(board);
 
             //Create and initializa goalNode
             int[,] goalNode = new int[board.GetLength(0), board.GetLength(1)];
@@ -90,16 +89,16 @@ namespace _8_Puzzle
             if (heuristics == 1)
             {
                 //A* with number of wrong positions
-                if(AStarSolve(board, goalNode, WrongPositionsCount))
+                if (AStarSolve(board, goalNode, WrongPositionsCount))
                 {
                     Console.WriteLine("Solution found");
                     if (printCost)
                     {
-                        Console.WriteLine("Cost: "+cost);
+                        Console.WriteLine("Cost: " + cost);
                     }
-                    else if (printVisitedNodes)
+                    if (printVisitedNodes)
                     {
-                        Console.WriteLine("Nodes : " + visitedNodes);
+                        Console.WriteLine("Visited nodes: " + visitedNodes);
                     }
                 }
                 else
@@ -110,20 +109,17 @@ namespace _8_Puzzle
             if (heuristics == 2)
             {
                 //A* with Manhattan distance
-                if(AStarSolve(board, goalNode, ManhattanDistance)){
-                    
+                if (AStarSolve(board, goalNode, ManhattanDistance))
+                {
+
                     Console.WriteLine("Solution found");
                     if (printCost)
                     {
-                        Console.WriteLine("Cost: "+cost);
+                        Console.WriteLine("Cost: " + cost);
                     }
-                    else if (printVisitedNodes)
+                    if (printVisitedNodes)
                     {
-                        Console.WriteLine("Nodes : " + visitedNodes);
-                    }
-                    else if (printSolutionSequence)
-                    {
-                        PrintBoard(board);
+                        Console.WriteLine("Visited nodes: " + visitedNodes);
                     }
                 }
                 else
@@ -147,13 +143,15 @@ namespace _8_Puzzle
             List<Node> closedList = new List<Node>();   //should be priority queue!!!!!!!!!!
 
             //Create start node
-            Node startNode = new Node(node); //= ;
+            Node startNode = new Node(node, null, 0); //= ;
 
             //Add startNode to the OPEN list
             openList.Add(startNode);
 
             while (openList.Count > 0)
             {
+                visitedNodes++;
+
                 //Get node n off the OPEN list with the lowest f(n)
                 int minCostNode = int.MaxValue;
                 int position = 0;
@@ -165,7 +163,6 @@ namespace _8_Puzzle
                         minCostNode = currentCost;
                         position = i;
                     }
-                    cost++;
                 }
                 Node nextNode = openList[position];
                 openList.RemoveAt(position);
@@ -173,22 +170,14 @@ namespace _8_Puzzle
                 //Add n to the CLOSED list
                 closedList.Add(nextNode);
 
-                // remove the if statement if you want to be printed in default mode 
-                if (printSolutionSequence)
-                {
-                    PrintBoard(nextNode.Board);
-                }
-                
-                //Console.WriteLine(heuristicFunction(nextNode.Board));
-                
-
-                //if n is the same as node_goal then return Solution(n)
-                /*if (Node.AreSameNodes(nextNode.Board, goalNode))  //not working correctly
-                {
-                    return true; 
-                }*/
                 if (heuristicFunction(nextNode.Board) == 0)
                 {
+                    cost = nextNode.Cost;
+
+                    if (printSolutionSequence)
+                    {
+                        PrintSolutionSequence(nextNode);
+                    }
                     return true;
                 }
 
@@ -199,19 +188,18 @@ namespace _8_Puzzle
                 //for each successor node n' of n {
                 foreach (var item in successors)
                 {
-                    visitedNodes++;
                     //Set the parent of n' to n
                     item.Parent = nextNode;
-                    
+
                     //Set h(n') to be the heuristically estimate distance to node_goal
                     int distanceToGoal = heuristicFunction(item.Board);
-                    
+
                     //Set g(n') to be g(n) plus the cost to get to n' from n (=1)
                     int costToItem = item.Parent.Cost + 1;
 
-                    //Set f(n') = g(n') + h(n')
+                    //Set f(n') = g(n') // + h(n')
                     item.Cost = costToItem;// + distanceToGoal;
-                   
+
                     //if n' is on the OPEN list and the existing one is as good or better then discard n' and continue
                     var openCopy = openList.Find(x => x.Equals(item));
                     if (openCopy != null)
@@ -235,7 +223,7 @@ namespace _8_Puzzle
                     //Remove occurrences of n' from OPEN and CLOSED
                     openList.RemoveAll(x => Node.AreSameNodes(x.Board, item.Board));
                     closedList.RemoveAll(x => Node.AreSameNodes(x.Board, item.Board));
-                    
+
                     //Add n' to the OPEN list
                     openList.Add(item);
                 }
@@ -327,10 +315,10 @@ namespace _8_Puzzle
             //filling the board with the given values, 0 means the empty field
             for (int i = 0; i < n; i++)
             {
-                
+
                 for (int j = 0; j < n; j++)
                 {
-       
+
                     board[i, j] = int.Parse(split[counter]);
 
                     counter++;
@@ -609,7 +597,7 @@ namespace _8_Puzzle
             {
                 for (int j = 0; j < n; ++j)
                 {
-                    if (board[i, j] != 0 && board[i, j] != n*i+j)
+                    if (board[i, j] != 0 && board[i, j] != n * i + j)
                     {
                         ++wrongPositionCount;
                     }
@@ -758,6 +746,23 @@ namespace _8_Puzzle
             }
 
             return true;
+        }
+
+        private static void PrintSolutionSequence(Node nextNode)
+        {
+            List<Node> solseq = new List<Node>();
+            Node nd = new Node(nextNode.Board, nextNode.Parent, nextNode.Cost);
+            while (nd.Parent != null)
+            {
+                solseq.Add(nd);
+                nd = nd.Parent;
+            }
+            solseq.Reverse();
+            Console.WriteLine("Solution sequence:");
+            foreach (var item in solseq)
+            {
+                PrintBoard(item.Board);
+            }
         }
 
         //private static int ReconstructPath(Node cameFrom, int currentPosition)
