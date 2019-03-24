@@ -27,8 +27,10 @@ The returned board:<br>
 3 1 2<br>
 6 4 0<br>
 7 8 5<br>
-<pre>
+
 ## Test results
+<pre>
+
 
 H1 = Heuristic for WrongPositionsCount<br>
 H2 = Heuristic for ManhattanDistance<br>
