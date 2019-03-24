@@ -28,11 +28,11 @@ The returned board:<br>
 6 4 0<br>
 7 8 5<br>
 <pre>
-####Test results
+## Test results
 
 H1 = Heuristic for WrongPositionsCount<br>
 H2 = Heuristic for ManhattanDistance<br>
-                                **3x3**
+                                ** 3x3 **
                                 
 H1:                                         H2: 
   Cost: 67 Visited Nodes: 3007                  Cost: 37 Visited Nodes: 95
@@ -41,12 +41,12 @@ H1:                                         H2:
   Cost: 14 Visited Nodes: 41                    Cost: 14 Visited Nodes: 20
   Cost: 14 Visited Nodes: 42                    Cost: 10 Visited Nodes: 11
   
-                                **4x4**
+                                ** 4x4 **
 H1:                                           H2: 
   Cost: 130 Visited Nodes: 3374                  Cost: 50 Visited Nodes: 259
   Cost: 22 Visited Nodes: 205                    Cost: 22 Visited Nodes: 54
   Cost: 62 Visited Nodes: 844                   Cost: 36 Visited Nodes: 887
-                                **5x5**
+                                ** 5x5 **
 H1:                                           H2: 
   Cost: 164 Visited Nodes: 6795                  Cost: 128 Visited Nodes: 5261
   Cost: 97 Visited Nodes: 2189                   Cost: 87 Visited Nodes: 3186
